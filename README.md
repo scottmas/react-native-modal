@@ -80,8 +80,8 @@ The `isVisible` prop is the only prop you'll really need to make the modal work:
 ## A complete example
 
 The following example consists in a component (`ModalTester`) with a button and a modal.
-The modal is controlled by the `isModalVisible` state variable and it is initially hidden, since its value is `false`.  
-Pressing the button sets `isModalVisible` to true, making the modal visible.  
+The modal is controlled by the `isModalVisible` state variable and it is initially hidden, since its value is `false`.
+Pressing the button sets `isModalVisible` to true, making the modal visible.
 Inside the modal there is another button that, when pressed, sets `isModalVisible` to false, hiding the modal.
 
 ```javascript
@@ -147,6 +147,7 @@ For a more complex example take a look at the `/example` directory.
 | onSwipeMove                    | func             | (percentageShown) => null | Called on each swipe event                                                                   |
 | onSwipeComplete                | func             | () => null                | Called when the `swipeThreshold` has been reached                                            |
 | onSwipeCancel                  | func             | () => null                | Called when the `swipeThreshold` has not been reached                                        |
+| renderWrappingModal            | func <props>     | React Native Modal        | Used to override the component default "modal" implementation. See the [FAQ for details.](#using-the-renderwrappingmodal-prop) |
 | scrollOffset                   | number           | 0                         | When > 0, disables swipe-to-close, in order to implement scrollable content                  |
 | scrollOffsetMax                | number           | 0                         | Used to implement overscroll feel when content is scrollable. See `/example` directory       |
 | scrollTo                       | func             | null                      | Used to implement scrollable modal. See `/example` directory for reference on how to use it  |
@@ -161,13 +162,73 @@ For a more complex example take a look at the `/example` directory.
 
 ### The component is not working as expected
 
-Under the hood `react-native-modal` uses react-native original [Modal component](https://facebook.github.io/react-native/docs/modal.html).  
+Under the hood `react-native-modal` uses react-native original [Modal component](https://facebook.github.io/react-native/docs/modal.html).
 Before reporting a bug, try swapping `react-native-modal` with react-native original Modal component and, if the issue persists, check if it has already been reported as a [react-native issue](https://github.com/facebook/react-native/issues).
+
+### Using the renderWrappingModal Prop
+
+The `renderWrappingModal` allows you to customize the component that provides the "modal" functionality (e.g. ejecting out of the view hierarchy). By default, this library uses the original react-native modal component. You may provide your own implementation or use an external library. If you were to provide an extremely simple implementation of a modal, you could do so as follows:
+```javascript
+import React from 'react';
+import { View, BackHandler } from 'react-native';
+import Modal from 'react-native-modal';
+
+class App extends React.Component{
+  render() {
+    return (
+      <Modal
+        isVisible={this.state.isVisible}
+        style={{backgroundColor: "pink"}}
+        onBackButtonPress={() => console.log("Back pressed")}
+        renderWrappingModal={CustomModal}
+        //renderWrappingModal={require('react-native-root-modal')} //If you want to use an external library...
+      >
+        <View style={{ flex: 1 }}>
+          <Text>I am the modal content!</Text>
+        </View>
+      </Modal>
+    )
+  }
+}
+
+class CustomModal extends React.Component{
+
+  //Remember to handle the required onBackButtonPress property...
+  componentWillMount() {
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+  }
+
+  componentWillUnmount() {
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+  }
+
+  handleBackButtonClick = () => {
+    this.props.onBackButtonPress();
+  }
+
+  render(){
+    //Note: You may access all the Modal props inside the custom component
+    const { children, isVisible, style, onBackButtonPress } = this.props;
+
+    if(!isVisible){
+      return null;
+    }
+
+    return <View style={[ABSOLUTE_STYLE, style]}>{children}</View>
+  }
+}
+
+const ABSOLUTE_STYLE = {
+  position: 'absolute',
+  width: '100%',
+  height: '100%'
+}
+```
 
 ### The backdrop is not completely filled/covered on some Android devices (Galaxy, for one)
 
-React-Native has a few issues detecting the correct device width/height of some devices.  
-If you're experiencing this issue, you'll need to install [`react-native-extra-dimensions-android`](https://github.com/Sunhat/react-native-extra-dimensions-android).  
+React-Native has a few issues detecting the correct device width/height of some devices.
+If you're experiencing this issue, you'll need to install [`react-native-extra-dimensions-android`](https://github.com/Sunhat/react-native-extra-dimensions-android).
 Then, provide the real window height (obtained from `react-native-extra-dimensions-android`) to the modal:
 
 ```javascript
@@ -224,7 +285,7 @@ Note that when using `useNativeDriver={true}` the modal won't drag correctly. Th
 
 ### The modal flashes in a weird way when animating
 
-Unfortunately this is a [know issue](https://github.com/react-native-community/react-native-modal/issues/92) that happens when `useNativeDriver=true` and must still be solved.  
+Unfortunately this is a [know issue](https://github.com/react-native-community/react-native-modal/issues/92) that happens when `useNativeDriver=true` and must still be solved.
 In the meanwhile as a workaround you can set the `hideModalContentWhileAnimating` prop to `true`: this seems to solve the issue.
 Also, do not assign a `backgroundColor` property directly to the Modal. Prefer to set it on the child container.
 
@@ -251,12 +312,12 @@ That said, I would strongly advice against using multiple modals at the same tim
 
 ### The StatusBar style changes when the modal shows up
 
-This issue has ben discussed [here](https://github.com/react-native-community/react-native-modal/issues/50).  
+This issue has ben discussed [here](https://github.com/react-native-community/react-native-modal/issues/50).
 The TLDR is: it's a know React-Native issue with the Modal component 😞
 
 ### The modal is not covering the entire screen
 
-The modal style applied by default has a small margin.  
+The modal style applied by default has a small margin.
 If you want the modal to cover the entire screen you can easily override it this way:
 
 ```js
@@ -275,8 +336,8 @@ Please notice that this is still a WIP fix and might not fix your issue yet, see
 
 ### The modal enter/exit animation flickers
 
-Make sure your `animationIn` and `animationOut` are set correctly.  
-We noticed that, for example, using `fadeIn` as an exit animation makes the modal flicker (it should be `fadeOut`!).  
+Make sure your `animationIn` and `animationOut` are set correctly.
+We noticed that, for example, using `fadeIn` as an exit animation makes the modal flicker (it should be `fadeOut`!).
 
 ## Available animations
 

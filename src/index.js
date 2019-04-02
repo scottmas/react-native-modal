@@ -4,7 +4,7 @@ import {
   DeviceEventEmitter,
   Dimensions,
   KeyboardAvoidingView,
-  Modal,
+  Modal as RNModal,
   PanResponder,
   Platform,
   TouchableWithoutFeedback
@@ -36,6 +36,7 @@ class ReactNativeModal extends Component {
     isVisible: PropTypes.bool.isRequired,
     hideModalContentWhileAnimating: PropTypes.bool,
     propagateSwipe: PropTypes.bool,
+    renderWrappingModal: PropTypes.func,
     onModalShow: PropTypes.func,
     onModalWillShow: PropTypes.func,
     onModalHide: PropTypes.func,
@@ -84,6 +85,7 @@ class ReactNativeModal extends Component {
     isVisible: false,
     hideModalContentWhileAnimating: false,
     propagateSwipe: PropTypes.false,
+    renderWrappingModal: RNModal,
     onBackdropPress: () => null,
     onBackButtonPress: () => null,
     swipeThreshold: 100,
@@ -483,6 +485,8 @@ class ReactNativeModal extends Component {
         {_children}
       </animatable.View>
     );
+
+    const Modal = this.props.renderWrappingModal;
 
     return (
       <Modal

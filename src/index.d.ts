@@ -39,6 +39,7 @@ declare module "react-native-modal" {
     onSwipeComplete?: () => void;
     onSwipeCancel?: () => void;
     swipeThreshold?: number;
+    renderWrappingModal?: (ModalProps) => ReactNode;
     style?: StyleProp<ViewStyle>;
     swipeDirection?: "up" | "down" | "left" | "right";
     scrollTo?: (e: any) => void;
